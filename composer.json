@@ -1,0 +1,25 @@
+{
+    "name": "e1on/omines-datatables-elasticsearch-adapter-bundle",
+    "description": "Elasticsearch adapter with search_after feature for DataTable Omines bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "E1on\\OminesDatatablesElasticsearchAdapterBundle\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Loli E1ON"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "symfony/framework-bundle": "^6.3|^7.0",
+        "symfony/property-access": "^6.3|^7.0",
+        "omines/datatables-bundle": "^0.7.1"
+    },
+    "require-dev": {
+        "ruflin/elastica": "^6.2|^7.3.2"
+    }
+}
