@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace E1on\OminesDatatablesElasticsearchAdapterBundle;
 
 use E1on\OminesDatatablesElasticsearchAdapterBundle\Enum\DataTableSessionEnum;
-use E1on\OminesDatatablesElasticsearchAdapterBundle\Provider\SessionProvider;
 use Elastica\Client;
 use Elastica\Query;
 use Elastica\Query\MultiMatch;
@@ -15,7 +14,6 @@ use Omines\DataTablesBundle\Adapter\AbstractAdapter;
 use Omines\DataTablesBundle\Adapter\AdapterQuery;
 use Omines\DataTablesBundle\Column\AbstractColumn;
 use Omines\DataTablesBundle\DataTableState;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Traversable;
 
 class ElasticaAdapter extends AbstractAdapter
@@ -26,16 +24,6 @@ class ElasticaAdapter extends AbstractAdapter
     private array $clientSettings = [];
 
     private array $indices = [];
-
-    private SessionInterface $session;
-
-    public function __construct(
-        private readonly SessionProvider $sessionProvider,
-    ) {
-        $this->session = $this->sessionProvider->provide();
-
-        parent::__construct();
-    }
 
     public function configure(array $options): void
     {
@@ -120,9 +108,9 @@ class ElasticaAdapter extends AbstractAdapter
         $sortDirection    = self::DEFAULT_SORT_DIRECTION;
         $dataTable        = $state->getDataTable()->getName();
 
-        $currentDocument  = $this->session->get(DataTableSessionEnum::getCurrentDocument($dataTable));
-        $previousDocument = $this->session->get(DataTableSessionEnum::getPreviousDocument($dataTable));
-        $from             = $this->session->get(DataTableSessionEnum::getForm($dataTable));
+        $currentDocument  = $this->getSession(DataTableSessionEnum::getCurrentDocument($dataTable));
+        $previousDocument = $this->getSession(DataTableSessionEnum::getPreviousDocument($dataTable));
+        $from             = $this->getSession(DataTableSessionEnum::getForm($dataTable));
 
         foreach ($state->getOrderBy() as [$column, $direction]) {
             /** @var AbstractColumn $column */
@@ -166,28 +154,28 @@ class ElasticaAdapter extends AbstractAdapter
             return;
         }
 
-        $currentDocument = $this->session->get(DataTableSessionEnum::getCurrentDocument($dataTable));
-        $betweenDocument = $this->session->get(DataTableSessionEnum::getBetweenDocument($dataTable));
+        $currentDocument = $this->getSession(DataTableSessionEnum::getCurrentDocument($dataTable));
+        $betweenDocument = $this->getSession(DataTableSessionEnum::getBetweenDocument($dataTable));
 
-        $this->session->set(DataTableSessionEnum::getCurrentDocument($dataTable), $lastDocument->getData());
+        $this->setSession(DataTableSessionEnum::getCurrentDocument($dataTable), $lastDocument->getData());
 
         if ($currentDocument) {
-            $this->session->set(DataTableSessionEnum::getBetweenDocument($dataTable), $currentDocument);
+            $this->setSession(DataTableSessionEnum::getBetweenDocument($dataTable), $currentDocument);
         }
 
         if ($betweenDocument) {
-            $this->session->set(DataTableSessionEnum::getPreviousDocument($dataTable), $betweenDocument);
+            $this->setSession(DataTableSessionEnum::getPreviousDocument($dataTable), $betweenDocument);
         }
 
-        $this->session->set(DataTableSessionEnum::getForm($dataTable), $state->getStart());
+        $this->setSession(DataTableSessionEnum::getForm($dataTable), $state->getStart());
     }
 
     private function clearMetaData(string $dataTable): void
     {
-        $this->session->remove(DataTableSessionEnum::getCurrentDocument($dataTable));
-        $this->session->remove(DataTableSessionEnum::getBetweenDocument($dataTable));
-        $this->session->remove(DataTableSessionEnum::getPreviousDocument($dataTable));
-        $this->session->remove(DataTableSessionEnum::getForm($dataTable));
+        $this->removeSession(DataTableSessionEnum::getCurrentDocument($dataTable));
+        $this->removeSession(DataTableSessionEnum::getBetweenDocument($dataTable));
+        $this->removeSession(DataTableSessionEnum::getPreviousDocument($dataTable));
+        $this->removeSession(DataTableSessionEnum::getForm($dataTable));
     }
 
     private function getValueFromArray(array $array, string $keyString): string
@@ -205,5 +193,20 @@ class ElasticaAdapter extends AbstractAdapter
         }
 
         return $value;
+    }
+
+    private function removeSession(string $name): void
+    {
+        unset($_SESSION[$name]);
+    }
+
+    private function getSession(string $name): mixed
+    {
+        return $_SESSION[$name] ?? null;
+    }
+
+    private function setSession(string $name, mixed $data): void
+    {
+        $_SESSION[$name] = $data;
     }
 }
