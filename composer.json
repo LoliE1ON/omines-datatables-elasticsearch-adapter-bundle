@@ -1,6 +1,7 @@
 {
     "name": "e1on/omines-datatables-elasticsearch-adapter-bundle",
     "description": "Elasticsearch adapter with search_after feature for DataTable Omines bundle",
+    "version": "1.0.0",
     "type": "symfony-bundle",
     "license": "MIT",
     "autoload": {
